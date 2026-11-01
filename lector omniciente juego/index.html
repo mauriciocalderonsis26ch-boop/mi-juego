@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lector Omnisciente - El Gran Escenario</title>
+  <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <div id="game-container">
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- Transmisión de la Corriente Estelar -->
+    <div id="star-stream-ticker">
+      <div id="ticker-messages"></div>
+    </div>
+
+    <!-- UI Superior (Estado del Jugador y Escenario) -->
+    <div id="top-ui">
+      <div class="player-hud">
+        <div class="hud-avatar">
+          <i class="fa-solid fa-user-ninja"></i>
+        </div>
+        <div class="hud-bars">
+          <div class="hud-title-row">
+            <span class="player-name">Kim Dokja</span>
+            <span class="player-level" id="level-display">Nivel 1</span>
+          </div>
+          <div class="bar-container hp-bar-bg">
+            <div id="hp-bar" class="bar-fill hp-fill" style="width: 100%;"></div>
+            <span id="hp-text" class="bar-text">100 / 100</span>
+          </div>
+          <div class="bar-container mp-bar-bg">
+            <div id="mp-bar" class="bar-fill mp-fill" style="width: 100%;"></div>
+            <span id="mp-text" class="bar-text">100 / 100</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="scenario-hud">
+        <div class="scenario-title" id="scenario-name">Escenario Principal #1</div>
+        <div class="scenario-objective" id="scenario-objective">Derrota a las criaturas del canal</div>
+        <div id="boss-hp-container" class="boss-bar-wrapper hidden">
+          <div class="boss-label" id="boss-name">Jefe Calamidad</div>
+          <div class="bar-container boss-bar-bg">
+            <div id="boss-hp-bar" class="bar-fill boss-fill" style="width: 100%;"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="coin-hud">
+        <i class="fa-solid fa-coins coin-icon"></i>
+        <span id="coin-display">0</span>
+      </div>
+    </div>
+
+    <!-- UI Inferior (Habilidades & Controles) -->
+    <div id="bottom-ui">
+      <div class="skills-bar">
+        <div class="skill-slot active-skill" id="skill-1">
+          <span class="skill-key">1 / Q</span>
+          <i class="fa-solid fa-bolt skill-icon"></i>
+          <span class="skill-name">Corte Celestial</span>
+          <div class="cooldown-overlay hidden" id="cd-1">0s</div>
+        </div>
+        <div class="skill-slot" id="skill-2">
+          <span class="skill-key">2 / E</span>
+          <i class="fa-solid fa-bookmark skill-icon"></i>
+          <span class="skill-name">Marcapáginas</span>
+          <div class="cooldown-overlay hidden" id="cd-2">0s</div>
+        </div>
+        <div class="skill-slot" id="skill-3">
+          <span class="skill-key">3 / R</span>
+          <i class="fa-solid fa-user-plus skill-icon"></i>
+          <span class="skill-name">Invocación</span>
+          <div class="cooldown-overlay hidden" id="cd-3">0s</div>
+        </div>
+        <div class="skill-slot" id="skill-4">
+          <span class="skill-key">ESPACIO</span>
+          <i class="fa-solid fa-wind skill-icon"></i>
+          <span class="skill-name">Esquive Perfecto</span>
+          <div class="cooldown-overlay hidden" id="cd-4">0s</div>
+        </div>
+      </div>
+
+      <div class="action-buttons">
+        <button class="btn-system" id="btn-status"><i class="fa-solid fa-id-card"></i> Cuarta Pared</button>
+        <button class="btn-system" id="btn-shop"><i class="fa-solid fa-store"></i> Bolsa Dokkaebi</button>
+      </div>
+    </div>
+
+    <!-- Controles Táctiles (Móvil) -->
+    <div id="mobile-controls">
+      <div id="dpad">
+        <button class="dpad-btn" id="btn-up"><i class="fa-solid fa-caret-up"></i></button>
+        <div class="dpad-middle">
+          <button class="dpad-btn" id="btn-left"><i class="fa-solid fa-caret-left"></i></button>
+          <div class="dpad-center"></div>
+          <button class="dpad-btn" id="btn-right"><i class="fa-solid fa-caret-right"></i></button>
+        </div>
+        <button class="dpad-btn" id="btn-down"><i class="fa-solid fa-caret-down"></i></button>
+      </div>
+      <div id="touch-actions">
+        <button class="action-btn attack-btn" id="touch-attack"><i class="fa-solid fa-hand-fist"></i></button>
+        <button class="action-btn dodge-btn" id="touch-dodge"><i class="fa-solid fa-wind"></i></button>
+        <button class="action-btn skill-btn" id="touch-skill1">Q</button>
+        <button class="action-btn skill-btn" id="touch-skill2">E</button>
+      </div>
+    </div>
+
+    <!-- Pantalla de Inicio / Menú Principal -->
+    <div id="overlay-start" class="overlay">
+      <div class="modal-box">
+        <h1 class="game-title">LECTOR OMNISCIENTE</h1>
+        <h3 class="subtitle">EL GRAN ESCENARIO DE LA CORRIENTE ESTELAR</h3>
+        <p class="story-intro">
+          Las transmisiones de la Corriente Estelar han comenzado. Has leído esta historia hasta el final. Utiliza tu conocimiento del texto original para sobrevivir a las pruebas, ganarte el favor de las Constelaciones y cambiar tu destino.
+        </p>
+        <div class="controls-guide">
+          <p><i class="fa-solid fa-keyboard"></i> <strong>Controles de Teclado:</strong></p>
+          <ul>
+            <li><strong>WASD / Flechas:</strong> Moverse</li>
+            <li><strong>Clic Izquierdo / J:</strong> Ataque Básico</li>
+            <li><strong>Espacio / K:</strong> Esquive Perfecto (Invulnerabilidad)</li>
+            <li><strong>Q / E / R:</strong> Habilidades del Marcapáginas & Invocación</li>
+          </ul>
+        </div>
+        <button class="btn-primary" id="btn-start-game">COMENZAR ESCENARIO</button>
+      </div>
+    </div>
+
+    <!-- Ventana de Estado: La Cuarta Pared -->
+    <div id="modal-status" class="overlay hidden">
+      <div class="modal-box system-window">
+        <button class="btn-close" id="close-status">&times;</button>
+        <h2 class="window-title"><i class="fa-solid fa-shield-halved"></i> LA CUARTA PARED (ESTADO)</h2>
+        <div class="status-grid">
+          <div class="status-col">
+            <p><strong>Atributo Único:</strong> Lector Omnisciente (Nv. 3)</p>
+            <p><strong>Estigma Activo:</strong> <span id="stat-stigma">Corte Celestial</span></p>
+            <p><strong>Fuerza:</strong> <span id="stat-str">10</span> <button class="btn-up-stat" onclick="upgradeStat('str')">+</button></p>
+            <p><strong>Agilidad:</strong> <span id="stat-agi">10</span> <button class="btn-up-stat" onclick="upgradeStat('agi')">+</button></p>
+            <p><strong>Constitución:</strong> <span id="stat-con">10</span> <button class="btn-up-stat" onclick="upgradeStat('con')">+</button></p>
+            <p><strong>Poder Mágico:</strong> <span id="stat-mag">10</span> <button class="btn-up-stat" onclick="upgradeStat('mag')">+</button></p>
+          </div>
+          <div class="status-col">
+            <h4>Constelaciones Patrocinadoras:</h4>
+            <ul class="constellation-list">
+              <li><i class="fa-solid fa-fire text-orange"></i> Juez del Fuego similar al Demonio</li>
+              <li><i class="fa-solid fa-eye text-purple"></i> Conspirador Secreto</li>
+              <li><i class="fa-solid fa-sun text-yellow"></i> Prisionero del Ceñidor Dorado</li>
+              <li><i class="fa-solid fa-dragon text-red"></i> Dragón Negro de la Llama Abisal</li>
+            </ul>
+          </div>
+        </div>
+        <p class="stat-cost-hint">Costo de mejora de atributo: <span id="stat-cost">100</span> Monedas</p>
+      </div>
+    </div>
+
+    <!-- Tienda: Bolsa Dokkaebi -->
+    <div id="modal-shop" class="overlay hidden">
+      <div class="modal-box system-window">
+        <button class="btn-close" id="close-shop">&times;</button>
+        <h2 class="window-title"><i class="fa-solid fa-bag-shopping"></i> BOLSA DOKKAEBI</h2>
+        <div class="shop-items">
+          <div class="shop-item">
+            <div class="item-info">
+              <h4>Fe Inquebrantable (Espada)</h4>
+              <p>Aumenta el daño físico en +25% y otorga efecto etéreo a los ataques.</p>
+            </div>
+            <button class="btn-buy" onclick="buyShopItem('weapon', 500)">500 Monedas</button>
+          </div>
+          <div class="shop-item">
+            <div class="item-info">
+              <h4>Poción de Elixir Mental</h4>
+              <p>Restaura instantáneamente toda la salud y el PM.</p>
+            </div>
+            <button class="btn-buy" onclick="buyShopItem('potion', 150)">150 Monedas</button>
+          </div>
+          <div class="shop-item">
+            <div class="item-info">
+              <h4>Ampliación de Ranuras de Marcapáginas</h4>
+              <p>Aumenta la fuerza de las habilidades prestadas un +30%.</p>
+            </div>
+            <button class="btn-buy" onclick="buyShopItem('bookmark_upgrade', 800)">800 Monedas</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pantalla de Fin de Juego / Victoria -->
+    <div id="overlay-gameover" class="overlay hidden">
+      <div class="modal-box">
+        <h1 class="game-title text-danger" id="gameover-title">HAS MUERTO</h1>
+        <p id="gameover-desc">Tu historia ha finalizado en este escenario...</p>
+        <button class="btn-primary" id="btn-restart">REENCARNAR (REINICIAR)</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
